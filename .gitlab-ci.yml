@@ -1,6 +1,9 @@
 stages:
-  - quality
+  - lint
+  - format
+  - type_check
   - test
+  - coverage
   - security
 
 default:
@@ -11,20 +14,29 @@ default:
     - pip install -r requirements.txt
 
 lint:
-  stage: quality
+  stage: lint
   script:
     - ruff check .
+
+format:
+  stage: format
+  script:
     - black --check .
 
-type-check:
-  stage: quality
+type_check:
+  stage: type_check
   script:
     - mypy --follow-imports=skip app.py ingest.py
 
 test:
   stage: test
   script:
-    - pytest
+    - pytest --no-cov
+
+coverage:
+  stage: coverage
+  script:
+    - pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=51
   artifacts:
     when: always
     reports:

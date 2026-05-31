@@ -98,13 +98,21 @@ def test_ci_pipeline_covers_quality_tests_and_security():
 
     expected_ci_entries = [
         "stages:",
-        "- quality",
+        "- lint",
+        "- format",
+        "- type_check",
         "- test",
+        "- coverage",
         "- security",
+        "stage: lint",
+        "stage: format",
+        "stage: type_check",
+        "stage: coverage",
         "ruff check .",
         "black --check .",
         "mypy --follow-imports=skip app.py ingest.py",
-        "pytest",
+        "pytest --no-cov",
+        "pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=51",
         "coverage_report:",
         "bandit -r app.py ingest.py -ll",
     ]
