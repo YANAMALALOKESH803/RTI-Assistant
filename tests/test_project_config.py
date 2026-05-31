@@ -49,6 +49,8 @@ def test_requirements_include_runtime_and_test_dependencies():
         assert package in requirements
 
     assert "-r requirements.txt" in dev_requirements
+    assert "coverage" in dev_requirements
+    assert "pip-audit" in dev_requirements
     assert "semgrep" in dev_requirements
 
 
@@ -77,6 +79,23 @@ def test_coverage_reporting_configuration_is_present():
 
     assert "[tool.coverage.report]" in pyproject_config
     assert "fail_under = 51" in pyproject_config
+
+    makefile = Path("Makefile").read_text(encoding="utf-8")
+    assert "coverage-report:" in makefile
+    assert "--cov-report=term-missing" in makefile
+    assert "--cov-report=xml" in makefile
+    assert "--cov-report=html" in makefile
+
+
+def test_dependency_audit_configuration_is_present():
+    makefile = Path("Makefile").read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    assert "audit:" in makefile
+    assert "dependency-audit:" in makefile
+    assert "pip-audit -r requirements.txt" in makefile
+    assert "pip-audit -r requirements.txt" in readme
+    assert "Dependency audit" in readme
 
 
 def test_pre_commit_hooks_cover_lint_format_types_security_and_quality():

@@ -44,18 +44,22 @@ The project uses pytest with coverage reporting and an enforced coverage thresho
 
 ```bash
 pytest
+pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=51
 ruff check .
 black --check .
 mypy app.py ingest.py
 bandit -r app.py ingest.py -ll
+pip-audit -r requirements.txt
 ```
 
-Equivalent shortcuts are available through `make test`, `make lint`, `make type-check`, and `make security`.
+Equivalent shortcuts are available through `make test`, `make coverage-report`, `make lint`,
+`make type-check`, `make audit`, and `make security`.
 
 ## Security
 
 - Secret scanning: Gitleaks pre-commit hook
 - Static analysis: Bandit
+- Dependency audit: pip-audit for Python dependencies
 - Dependency and quality gates: local pre-commit hooks
 
 ## Project Structure

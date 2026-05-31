@@ -1,4 +1,4 @@
-.PHONY: install lint format type-check test security pre-commit-check
+.PHONY: install lint format type-check test coverage-report audit dependency-audit security pre-commit-check
 
 install:
 	pip install -r requirements.txt
@@ -20,6 +20,15 @@ type-check:
 
 test:
 	pytest
+
+coverage-report:
+	pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=51
+
+audit:
+	pip-audit -r requirements.txt
+
+dependency-audit:
+	pip-audit -r requirements.txt
 
 security:
 	bandit -r app.py ingest.py -ll

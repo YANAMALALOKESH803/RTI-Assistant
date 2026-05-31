@@ -1,2 +1,4 @@
 -r requirements.txt
+coverage
+pip-audit
 semgrep
