@@ -45,6 +45,9 @@ The project uses pytest with coverage reporting and an enforced coverage thresho
 ```bash
 pytest
 pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=51
+coverage report
+coverage xml
+coverage html
 ruff check .
 black --check .
 mypy app.py ingest.py

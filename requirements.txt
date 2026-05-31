@@ -12,6 +12,8 @@ huggingface-hub
 pytest
 ruff
 pytest-cov
+coverage
+pip-audit
 pre-commit
 black
 mypy
