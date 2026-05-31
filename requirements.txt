@@ -11,4 +11,4 @@ pypdf
 huggingface-hub
 pytest
 ruff
-
+pytest-cov
