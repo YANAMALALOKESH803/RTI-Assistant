@@ -9,7 +9,6 @@ def test_required_top_level_files_exist():
         "requirements-dev.txt",
         "LICENSE",
         "Makefile",
-        ".gitlab-ci.yml",
         ".coveragerc",
         ".flake8",
         ".pre-commit-config.yaml",
@@ -106,40 +105,6 @@ def test_pre_commit_hooks_cover_lint_format_types_security_and_quality():
         assert hook in pre_commit_config
 
     assert "--config=.gitleaks.toml" in pre_commit_config
-
-
-def test_ci_pipeline_covers_quality_tests_and_security():
-    ci_config = Path(".gitlab-ci.yml").read_text(encoding="utf-8")
-
-    expected_ci_entries = [
-        "stages:",
-        "- lint",
-        "- format",
-        "- type_check",
-        "- test",
-        "- coverage",
-        "- security",
-        "stage: lint",
-        "stage: format",
-        "stage: type_check",
-        "stage: coverage",
-        "ruff check .",
-        "flake8 --config=.flake8 .",
-        "pylint --errors-only --rcfile=pyproject.toml tests",
-        "vulture app.py ingest.py tests --min-confidence=80",
-        "black --check .",
-        "pyupgrade --py311-plus --exit-zero-even-if-changed app.py ingest.py tests/*.py",
-        "mypy --follow-imports=skip app.py ingest.py",
-        "pytest --no-cov",
-        "pytest --cov=. --cov-report=term-missing --cov-report=xml --cov-fail-under=51",
-        "coverage_report:",
-        "bandit -r app.py ingest.py -ll",
-        "semgrep --config=auto --error app.py ingest.py",
-        "pip install -r requirements-dev.txt",
-    ]
-
-    for entry in expected_ci_entries:
-        assert entry in ci_config
 
 
 def test_tooling_configuration_is_declared_in_pyproject():

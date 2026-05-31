@@ -56,7 +56,7 @@ Equivalent shortcuts are available through `make test`, `make lint`, `make type-
 
 - Secret scanning: Gitleaks pre-commit hook
 - Static analysis: Bandit
-- Dependency and quality gates: GitLab CI plus local pre-commit hooks
+- Dependency and quality gates: local pre-commit hooks
 
 ## Project Structure
 
