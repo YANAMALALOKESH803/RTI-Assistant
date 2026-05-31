@@ -89,14 +89,35 @@ if "history" not in st.session_state:
 query = st.text_input("Ask your RTI Question", value=selected_question)
 
 # ---------------- PROCESS QUERY ----------------
+if query and (
+    len(st.session_state.history) == 0
+    or st.session_state.history[-1]["question"] != query
+):
 
-if query:
     with st.spinner("AI is thinking..."):
+
+        # Retrieve PDF chunks
         docs = db.similarity_search(query, k=3)
 
-        context = "\n".join([doc.page_content for doc in docs])
+        context = "\n\n".join(
+            [doc.page_content for doc in docs]
+        )
 
         prompt = f"""
+You are an RTI legal assistant.
+
+Answer ONLY from the provided RTI documents.
+
+Rules:
+- Use only the provided context
+- Give one complete answer
+- Do not repeat
+- Do not repeat question
+- No random numbering
+- No hallucinations
+- If not found say:
+"This information is not clearly available in the provided RTI documents."
+
 Context:
 {context}
 
@@ -106,76 +127,195 @@ Question:
 Answer:
 """
 
-        result = generator(prompt, max_new_tokens=100)
+        result = generator(
+            prompt,
+            max_new_tokens=10000,
+            temperature=0.2,
+            do_sample=False,
+            repetition_penalty=1.2,
+            truncation=True
+        )
 
-        answer = result[0]["generated_text"]
+        generated = result[0]["generated_text"]
 
-        st.session_state.history.append({"question": query, "answer": answer, "docs": docs})
+        # Remove prompt
+        if prompt in generated:
+            answer = generated.replace(
+                prompt,
+                ""
+            ).strip()
+        else:
+            answer = generated.strip()
 
+        # Remove tags
+        if "Answer:" in answer:
+            answer = answer.split(
+                "Answer:"
+            )[-1].strip()
+
+        if "Question:" in answer:
+            answer = answer.split(
+                "Question:"
+            )[0].strip()
+
+        # Remove duplicate lines
+        cleaned = []
+
+        for line in answer.split("\n"):
+            line = line.strip()
+
+            if (
+                line
+                and line not in cleaned
+                and len(line) > 2
+            ):
+                cleaned.append(line)
+
+        answer = "\n".join(cleaned)
+
+        if len(answer) < 10:
+            answer = (
+                "This information is not clearly "
+                "available in the provided RTI documents."
+            )
+
+        # Save ONCE only
+        st.session_state.history.append(
+            {
+                "question": query,
+                "answer": answer,
+                "docs": docs
+            }
+        )
 # ---------------- DISPLAY CHAT ----------------
-
 for idx, item in enumerate(st.session_state.history):
+
     st.markdown(
         f"""
-        <div class="chat-user">
-        <b>You</b><br><br>
-        {item["question"]}
+        <div class='chat-user'>
+        <b>You</b><br>
+        {item['question']}
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
     st.markdown(
         f"""
-        <div class="chat-ai">
+        <div class='chat-ai'>
         <b>AI Assistant</b><br><br>
-        {item["answer"]}
+        {item['answer']}
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
+    # Sources Used
     with st.expander("📄 Sources Used"):
-        for i, doc in enumerate(item["docs"]):
-            source = doc.metadata.get("source", "Unknown")
 
-            st.write(os.path.basename(source))
+        if "docs" in item:
 
-            if os.path.exists(source):
-                with open(source, "rb") as pdf_file:
-                    st.download_button(
-                        label=f"Open {os.path.basename(source)}",
-                        data=pdf_file,
-                        file_name=os.path.basename(source),
-                        mime="application/pdf",
-                        key=f"pdf_{idx}_{i}",
+            shown = []
+
+            for i, doc in enumerate(item["docs"]):
+
+                source = doc.metadata.get(
+                    "source",
+                    "Unknown"
+                )
+
+                if source not in shown:
+
+                    shown.append(source)
+
+                    st.write(
+                        f"📄 {os.path.basename(source)}"
                     )
 
-st.divider()
+                    with open(source, "rb") as file:
 
+                        st.download_button(
+                            label=f"Open {os.path.basename(source)}",
+                            data=file,
+                            file_name=os.path.basename(source),
+                            mime="application/pdf",
+                            key=f"pdf_{idx}_{i}"
+                        )
+
+# NEXT QUESTION BUTTON
+if st.button("Generate"):
+
+    st.session_state.query = ""
+
+    st.rerun()
 # ---------------- DRAFT GENERATOR ----------------
 
+# RTI DRAFT GENERATOR
 st.subheader("RTI Draft Generator")
 
-issue = st.text_area("Describe your issue")
+draft_issue = st.text_area(
+    "Describe your issue",
+    height=120,
+    key="draft_issue"
+)
 
 if st.button("Generate Draft"):
-    draft = f"""
-To,
-Public Information Officer
 
-Subject: RTI Request
+    if not draft_issue.strip():
+        st.warning("Please describe your issue.")
 
-Under Section 6(1) of the RTI Act,
-I request information regarding:
+    else:
 
-{issue}
+        with st.spinner("Generating RTI application..."):
 
-Kindly provide the requested information.
+            draft_docs = db.similarity_search(
+                draft_issue,
+                k=3
+            )
 
-Regards
+            draft_context = "\n\n".join(
+                [doc.page_content for doc in draft_docs]
+            )
+
+            draft_prompt = f"""
+You are an expert RTI legal assistant.
+
+Use ONLY the provided RTI documents.
+
+Generate a formal RTI application.
+
+RTI Context:
+{draft_context}
+
+Citizen Issue:
+{draft_issue}
+
+RTI Application:
 """
 
-    st.text_area("Generated RTI Draft", draft, height=250)
+            draft_result = generator(
+                draft_prompt,
+                max_new_tokens=1200,
+                temperature=0.2,
+                do_sample=False,
+                repetition_penalty=1.2,
+                truncation=True
+            )
 
-    st.download_button("Download Draft", draft, file_name="RTI_Draft.txt", key="draft_download")
+            generated = draft_result[0]["generated_text"]
+
+            draft = generated.replace(
+                draft_prompt,
+                ""
+            ).strip()
+
+            st.markdown(
+                "### Generated RTI Application"
+            )
+
+            st.text_area(
+                "",
+                value=draft,
+                height=400,
+                key="draft_output"
+            )
