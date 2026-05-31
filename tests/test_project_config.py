@@ -1,0 +1,90 @@
+from pathlib import Path
+import re
+
+
+def test_required_top_level_files_exist():
+    required_files = [
+        "README.md",
+        "requirements.txt",
+        ".coveragerc",
+        ".pre-commit-config.yaml",
+        ".gitleaks.toml",
+        ".env.example",
+        "Dockerfile",
+    ]
+
+    for file_name in required_files:
+        assert Path(file_name).is_file()
+
+
+def test_requirements_include_runtime_and_test_dependencies():
+    requirements = Path("requirements.txt").read_text(encoding="utf-8").splitlines()
+
+    expected_packages = [
+        "streamlit",
+        "langchain",
+        "langchain-community",
+        "langchain-huggingface",
+        "faiss-cpu",
+        "transformers",
+        "pytest",
+        "pytest-cov",
+        "pre-commit",
+        "black",
+        "mypy",
+        "bandit",
+        "ruff",
+    ]
+
+    for package in expected_packages:
+        assert package in requirements
+
+
+def test_pytest_coverage_configuration_is_present():
+    pytest_config = Path("pyproject.toml").read_text(encoding="utf-8")
+    fail_under_match = re.search(r"--cov-fail-under=(\d+)", pytest_config)
+
+    assert "[tool.pytest.ini_options]" in pytest_config
+    assert 'testpaths = ["tests"]' in pytest_config
+    assert "--cov=." in pytest_config
+    assert "--cov-report=term-missing" in pytest_config
+    assert "--cov-report=xml" in pytest_config
+    assert fail_under_match is not None
+    assert int(fail_under_match.group(1)) > 50
+
+
+def test_coverage_reporting_configuration_is_present():
+    coverage_config = Path(".coveragerc").read_text(encoding="utf-8")
+    pyproject_config = Path("pyproject.toml").read_text(encoding="utf-8")
+
+    assert "[report]" in coverage_config
+    assert "show_missing = True" in coverage_config
+    assert "fail_under = 51" in coverage_config
+    assert "[xml]" in coverage_config
+    assert "output = coverage.xml" in coverage_config
+
+    assert "[tool.coverage.report]" in pyproject_config
+    assert "fail_under = 51" in pyproject_config
+
+
+def test_pre_commit_hooks_cover_lint_format_types_security_and_quality():
+    pre_commit_config = Path(".pre-commit-config.yaml").read_text(encoding="utf-8")
+
+    expected_hooks = [
+        "id: ruff",
+        "id: ruff-format",
+        "id: black",
+        "id: mypy",
+        "id: bandit",
+        "id: gitleaks",
+        "id: trailing-whitespace",
+        "id: end-of-file-fixer",
+        "id: check-yaml",
+        "id: check-toml",
+        "id: check-added-large-files",
+    ]
+
+    for hook in expected_hooks:
+        assert hook in pre_commit_config
+
+    assert "--config=.gitleaks.toml" in pre_commit_config
