@@ -5,10 +5,14 @@ install:
 
 lint:
 	ruff check .
+	flake8 --config=.flake8 .
+	pylint --errors-only --rcfile=pyproject.toml tests
+	vulture app.py ingest.py tests --min-confidence=80
 	black --check .
 
 format:
 	ruff check . --fix
+	pyupgrade --py311-plus --exit-zero-even-if-changed app.py ingest.py tests/*.py
 	black .
 
 type-check:
@@ -19,6 +23,7 @@ test:
 
 security:
 	bandit -r app.py ingest.py -ll
+	semgrep --config=auto --error app.py ingest.py
 
 pre-commit-check:
 	pre-commit run --all-files

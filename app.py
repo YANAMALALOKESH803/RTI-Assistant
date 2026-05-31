@@ -1,8 +1,9 @@
-import streamlit as st
+import os
+
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
+import streamlit as st
 from transformers import pipeline
-import os
 
 # ---------------- PAGE CONFIG ----------------
 
@@ -10,7 +11,7 @@ st.set_page_config(page_title="RTI Assistant AI", page_icon="⚖️", layout="wi
 
 # ---------------- LOAD CSS ----------------
 
-with open("assets/style.css") as f:
+with open("assets/style.css", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ---------------- TITLE ----------------
@@ -62,9 +63,9 @@ st.sidebar.success("Citizen Friendly")
 def load_db():
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-    db = FAISS.load_local("vectorstore", embeddings, allow_dangerous_deserialization=True)
+    vector_db = FAISS.load_local("vectorstore", embeddings, allow_dangerous_deserialization=True)
 
-    return db
+    return vector_db
 
 
 # ---------------- LOAD MODEL ----------------
@@ -118,7 +119,7 @@ for idx, item in enumerate(st.session_state.history):
         f"""
         <div class="chat-user">
         <b>You</b><br><br>
-        {item['question']}
+        {item["question"]}
         </div>
         """,
         unsafe_allow_html=True,
@@ -128,7 +129,7 @@ for idx, item in enumerate(st.session_state.history):
         f"""
         <div class="chat-ai">
         <b>AI Assistant</b><br><br>
-        {item['answer']}
+        {item["answer"]}
         </div>
         """,
         unsafe_allow_html=True,

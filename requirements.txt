@@ -16,3 +16,7 @@ pre-commit
 black
 mypy
 bandit
+vulture
+pylint
+flake8
+pyupgrade
