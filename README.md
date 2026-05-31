@@ -23,6 +23,12 @@ LangChain
 HuggingFace
 FAISS Vector Database
 
+## Security
+
+- Secret Scanning (Gitleaks / TruffleHog)
+- Dependency Audit (uv audit / pip-audit / npm audit)
+- Static Analysis (Bandit)
+
 ## Project Structure
 
 rti-assistant/
