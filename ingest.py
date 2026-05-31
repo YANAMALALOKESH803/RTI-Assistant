@@ -11,16 +11,11 @@ for file in os.listdir("data"):
         loader = PyPDFLoader(f"data/{file}")
         docs.extend(loader.load())
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=50
-)
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 
 chunks = splitter.split_documents(docs)
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 db = FAISS.from_documents(chunks, embeddings)
 

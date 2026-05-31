@@ -6,6 +6,9 @@ def test_required_top_level_files_exist():
     required_files = [
         "README.md",
         "requirements.txt",
+        "LICENSE",
+        "Makefile",
+        ".gitlab-ci.yml",
         ".coveragerc",
         ".pre-commit-config.yaml",
         ".gitleaks.toml",
@@ -88,3 +91,39 @@ def test_pre_commit_hooks_cover_lint_format_types_security_and_quality():
         assert hook in pre_commit_config
 
     assert "--config=.gitleaks.toml" in pre_commit_config
+
+
+def test_ci_pipeline_covers_quality_tests_and_security():
+    ci_config = Path(".gitlab-ci.yml").read_text(encoding="utf-8")
+
+    expected_ci_entries = [
+        "stages:",
+        "- quality",
+        "- test",
+        "- security",
+        "ruff check .",
+        "black --check .",
+        "mypy --follow-imports=skip app.py ingest.py",
+        "pytest",
+        "coverage_report:",
+        "bandit -r app.py ingest.py -ll",
+    ]
+
+    for entry in expected_ci_entries:
+        assert entry in ci_config
+
+
+def test_tooling_configuration_is_declared_in_pyproject():
+    pyproject_config = Path("pyproject.toml").read_text(encoding="utf-8")
+
+    expected_sections = [
+        "[tool.ruff]",
+        "[tool.black]",
+        "[tool.mypy]",
+        "[tool.bandit]",
+        "[tool.pytest.ini_options]",
+        "[tool.coverage.report]",
+    ]
+
+    for section in expected_sections:
+        assert section in pyproject_config

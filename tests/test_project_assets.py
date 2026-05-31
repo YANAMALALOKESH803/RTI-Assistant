@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 ASSET_PATH = Path("assets/style.css")
 DATA_PATH = Path("data")
 VECTORSTORE_PATH = Path("vectorstore")

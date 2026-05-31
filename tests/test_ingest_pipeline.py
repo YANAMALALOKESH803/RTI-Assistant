@@ -1,7 +1,6 @@
 import ast
 from pathlib import Path
 
-
 INGEST_PATH = Path("ingest.py")
 
 

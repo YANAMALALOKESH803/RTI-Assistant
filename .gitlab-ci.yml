@@ -1,0 +1,40 @@
+stages:
+  - quality
+  - test
+  - security
+
+default:
+  image: python:3.11
+  before_script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+
+lint:
+  stage: quality
+  script:
+    - ruff check .
+    - black --check .
+
+type-check:
+  stage: quality
+  script:
+    - mypy --follow-imports=skip app.py ingest.py
+
+test:
+  stage: test
+  script:
+    - pytest
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - coverage.xml
+
+security:
+  stage: security
+  script:
+    - bandit -r app.py ingest.py -ll

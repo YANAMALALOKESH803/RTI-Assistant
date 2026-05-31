@@ -6,19 +6,12 @@ import os
 
 # ---------------- PAGE CONFIG ----------------
 
-st.set_page_config(
-    page_title="RTI Assistant AI",
-    page_icon="⚖️",
-    layout="wide"
-)
+st.set_page_config(page_title="RTI Assistant AI", page_icon="⚖️", layout="wide")
 
 # ---------------- LOAD CSS ----------------
 
 with open("assets/style.css") as f:
-    st.markdown(
-        f"<style>{f.read()}</style>",
-        unsafe_allow_html=True
-    )
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ---------------- TITLE ----------------
 
@@ -28,7 +21,7 @@ st.markdown(
     RTI Assistant AI
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 st.markdown(
@@ -37,7 +30,7 @@ st.markdown(
     AI Civic Rights Assistant for India
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 # ---------------- SIDEBAR ----------------
@@ -46,12 +39,7 @@ st.sidebar.title("⚡ RTI Assistant")
 
 st.sidebar.markdown("### Suggested Questions")
 
-questions = [
-    "How to file RTI?",
-    "What is RTI fee?",
-    "Appeal process?",
-    "RTI response time?"
-]
+questions = ["How to file RTI?", "What is RTI fee?", "Appeal process?", "RTI response time?"]
 
 selected_question = ""
 
@@ -69,31 +57,22 @@ st.sidebar.success("Citizen Friendly")
 
 # ---------------- LOAD DATABASE ----------------
 
+
 @st.cache_resource
 def load_db():
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    )
-
-    db = FAISS.load_local(
-        "vectorstore",
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
+    db = FAISS.load_local("vectorstore", embeddings, allow_dangerous_deserialization=True)
 
     return db
 
 
 # ---------------- LOAD MODEL ----------------
 
+
 @st.cache_resource
 def load_model():
-
-    return pipeline(
-        "text-generation",
-        model="gpt2"
-    )
+    return pipeline("text-generation", model="gpt2")
 
 
 db = load_db()
@@ -106,25 +85,15 @@ if "history" not in st.session_state:
 
 # ---------------- INPUT ----------------
 
-query = st.text_input(
-    "Ask your RTI Question",
-    value=selected_question
-)
+query = st.text_input("Ask your RTI Question", value=selected_question)
 
 # ---------------- PROCESS QUERY ----------------
 
 if query:
-
     with st.spinner("AI is thinking..."):
+        docs = db.similarity_search(query, k=3)
 
-        docs = db.similarity_search(
-            query,
-            k=3
-        )
-
-        context = "\n".join(
-            [doc.page_content for doc in docs]
-        )
+        context = "\n".join([doc.page_content for doc in docs])
 
         prompt = f"""
 Context:
@@ -136,27 +105,15 @@ Question:
 Answer:
 """
 
-        result = generator(
-            prompt,
-            max_new_tokens=100
-        )
+        result = generator(prompt, max_new_tokens=100)
 
         answer = result[0]["generated_text"]
 
-        st.session_state.history.append(
-            {
-                "question": query,
-                "answer": answer,
-                "docs": docs
-            }
-        )
+        st.session_state.history.append({"question": query, "answer": answer, "docs": docs})
 
 # ---------------- DISPLAY CHAT ----------------
 
-for idx, item in enumerate(
-    st.session_state.history
-):
-
+for idx, item in enumerate(st.session_state.history):
     st.markdown(
         f"""
         <div class="chat-user">
@@ -164,7 +121,7 @@ for idx, item in enumerate(
         {item['question']}
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
     st.markdown(
@@ -174,37 +131,23 @@ for idx, item in enumerate(
         {item['answer']}
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
     with st.expander("📄 Sources Used"):
+        for i, doc in enumerate(item["docs"]):
+            source = doc.metadata.get("source", "Unknown")
 
-        for i, doc in enumerate(
-            item["docs"]
-        ):
-
-            source = doc.metadata.get(
-                "source",
-                "Unknown"
-            )
-
-            st.write(
-                os.path.basename(source)
-            )
+            st.write(os.path.basename(source))
 
             if os.path.exists(source):
-
-                with open(
-                    source,
-                    "rb"
-                ) as pdf_file:
-
+                with open(source, "rb") as pdf_file:
                     st.download_button(
                         label=f"Open {os.path.basename(source)}",
                         data=pdf_file,
                         file_name=os.path.basename(source),
                         mime="application/pdf",
-                        key=f"pdf_{idx}_{i}"
+                        key=f"pdf_{idx}_{i}",
                     )
 
 st.divider()
@@ -213,12 +156,9 @@ st.divider()
 
 st.subheader("RTI Draft Generator")
 
-issue = st.text_area(
-    "Describe your issue"
-)
+issue = st.text_area("Describe your issue")
 
 if st.button("Generate Draft"):
-
     draft = f"""
 To,
 Public Information Officer
@@ -235,15 +175,6 @@ Kindly provide the requested information.
 Regards
 """
 
-    st.text_area(
-        "Generated RTI Draft",
-        draft,
-        height=250
-    )
+    st.text_area("Generated RTI Draft", draft, height=250)
 
-    st.download_button(
-        "Download Draft",
-        draft,
-        file_name="RTI_Draft.txt",
-        key="draft_download"
-    )
+    st.download_button("Download Draft", draft, file_name="RTI_Draft.txt", key="draft_download")

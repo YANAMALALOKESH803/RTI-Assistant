@@ -1,7 +1,6 @@
 import ast
 from pathlib import Path
 
-
 APP_PATH = Path("app.py")
 
 
@@ -28,9 +27,7 @@ def test_app_configures_streamlit_page():
 def test_app_defines_cached_resource_loaders():
     source = _app_source()
     tree = _app_tree()
-    function_names = {
-        node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
-    }
+    function_names = {node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)}
 
     assert {"load_db", "load_model"}.issubset(function_names)
     assert source.count("@st.cache_resource") >= 2
