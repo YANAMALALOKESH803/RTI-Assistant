@@ -1,4 +1,4 @@
-# RTI Assistant AI
+﻿# RTI Assistant AI
 
 AI-powered CivicTech assistant built for RTI (Right to Information) guidance and draft generation.
 
