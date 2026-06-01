@@ -10,15 +10,15 @@ VECTOR_PATH = "vectorstore"
 documents = []
 
 # Load PDFs
-for file in os.listdir(DATA_PATH):
+for file in os.listdir("data"):
     if file.endswith(".pdf"):
         loader = PyPDFLoader(os.path.join(DATA_PATH, file))
         documents.extend(loader.load())
 
 # Split text
 splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,
-    chunk_overlap=150
+    chunk_size=500,
+    chunk_overlap=50
 )
 
 docs = splitter.split_documents(documents)
@@ -32,6 +32,6 @@ embeddings = HuggingFaceEmbeddings(
 db = FAISS.from_documents(docs, embeddings)
 
 # Save
-db.save_local(VECTOR_PATH)
+db.save_local("vectorstore")
 
 print("Vector DB created successfully!")
