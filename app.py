@@ -319,3 +319,10 @@ RTI Application:
                 height=400,
                 key="draft_output"
             )
+
+            st.download_button(
+                label="Download Draft",
+                data=draft,
+                file_name="RTI_Application.txt",
+                mime="text/plain"
+            )
