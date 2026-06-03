@@ -56,6 +56,16 @@ pip install -r requirements.txt
 
 ---
 
+## Security Checklist
+
+The project includes security validation recommendations for production readiness:
+
+* Secret Scanning (Gitleaks / TruffleHog)
+* Dependency Audit (uv audit / pip-audit / npm audit)
+* Static Analysis (Bandit)
+
+---
+
 ## Running the Application
 
 Start the Streamlit server:

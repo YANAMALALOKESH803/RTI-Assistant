@@ -11,4 +11,14 @@ pypdf
 huggingface-hub
 pytest
 ruff
-
+pytest-cov
+coverage
+pip-audit
+pre-commit
+black
+mypy
+bandit
+vulture
+pylint
+flake8
+pyupgrade
